@@ -1,5 +1,18 @@
+import os
 import ollama
 from typing import Generator, List, Tuple
+
+def load_system_prompt() -> str:
+    """Read the system prompt from prompts/system.txt."""
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        prompt_path = os.path.join(current_dir, "prompts", "system.txt")
+        if os.path.exists(prompt_path):
+            with open(prompt_path, "r", encoding="utf-8") as f:
+                return f.read().strip()
+    except Exception:
+        pass
+    return ""
 
 def get_installed_models() -> List[str]:
     """Retrieve the list of installed models from local Ollama."""
@@ -30,9 +43,15 @@ def stream_chat(prompt: str, model: str = None) -> Generator[Tuple[str, str], No
             model = "qwen2.5:latest"  # Fallback default
 
     try:
+        system_prompt = load_system_prompt()
+        messages = []
+        if system_prompt:
+            messages.append({'role': 'system', 'content': system_prompt})
+        messages.append({'role': 'user', 'content': prompt})
+
         stream = ollama.chat(
             model=model,
-            messages=[{'role': 'user', 'content': prompt}],
+            messages=messages,
             stream=True,
         )
         for chunk in stream:
