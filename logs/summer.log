@@ -240,3 +240,122 @@ Forget my favorite color
 Summer:
 Done! I've removed your favorite color from memory. Is there anything else you'd like to update or remember?
 
+[07:26]
+User:
+my favorite color is blue and my name is Carlos
+
+[07:26]
+Summer:
+Got it, Carlos! I've saved that info — your favorite color is blue. 🔵 I'll keep that in mind for future conversations. Nice to meet you!
+
+Is there anything you'd like help with today?
+
+[07:26]
+User:
+whats my favorite color?
+
+[07:26]
+Summer:
+Your favorite color is **blue**, Carlos! 🔵
+
+[07:26]
+User:
+thank you
+
+[07:26]
+Summer:
+You're welcome, Carlos! Anytime. 😊 Let me know if there's anything else I can help you with!
+
+[07:33]
+User:
+Find all .toml files in this project
+
+[07:33]
+Summer:
+I searched the project and found **2 TOML files**:
+
+- `config.toml`
+- `pyproject.toml`
+
+Let me know if you'd like to peek inside either of them, or if you were looking for something more specific (e.g., files matching a particular pattern, or searching inside subdirectories that may not have been included).
+
+[07:34]
+User:
+Show me the contents of config.toml
+
+[07:34]
+Summer:
+```toml
+default_model = "minimax-m3:cloud"
+temperature = 0.7
+system_prompt = "app/prompts/system.txt"
+stream = true
+theme = "dark"
+```
+
+That's the full contents of `config.toml` — looks like a fairly minimal configuration with model settings, a system prompt reference, and theme preferences. Want me to read `pyproject.toml` as well, or help you edit anything here?
+
+[07:34]
+User:
+Copy "hello world" to my clipboard
+
+[07:34]
+Summer:
+Done — **"hello world"** is now on your clipboard. Ready to paste wherever you need it.
+
+[07:34]
+User:
+What is in my clipboard?
+
+[07:34]
+Summer:
+Your clipboard currently contains: **"hello world"**
+
+[07:42]
+User:
+hi summer! what are the things you can do?
+
+[07:42]
+Summer:
+Hi there! 👋 Great to meet you! I'm Summer, your persistent AI assistant. Here's a quick rundown of what I can help you with:
+
+## 💬 **Conversation**
+- Natural, friendly chats with context awareness
+- I remember your preferences and ongoing work
+
+## 🧠 **Memory & Personalization**
+- Remember things like your favorite color (I see blue is yours! 💙), ongoing projects, important dates, people you mention, and routines
+- Everything stays local and under your control
+
+## 💻 **Computer Control**
+- Interact with your files (create folders, rename/move things)
+- Run commands and open local apps (VS Code, Spotify, etc.)
+- *I always explain what I'm doing before acting*
+
+## 📋 **Productivity**
+- Set reminders and manage tasks
+- Summarize notes and organize your directories
+
+## 👨‍💻 **Development**
+- Code reviews, debugging, writing code & tests
+- Git operations and software engineering help
+
+## 🌐 **Knowledge & Research**
+- Answer questions, summarize topics, translate, do math
+- Research and problem-solving
+
+## 🎮 **Entertainment**
+- Movie recommendations, jokes, trivia, light games
+
+## ⚙️ **Automation**
+- Schedule backups, clean temp files, archive things
+
+---
+
+**A few important things to know:**
+- I always explain my actions before touching your system
+- Destructive actions (deletes, overwrites, risky commands) need your explicit approval
+- If I don't know something, I'll tell you rather than make it up
+
+What would you like to start with? 😊
+

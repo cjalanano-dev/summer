@@ -2,6 +2,13 @@
 
 All notable changes to Project Summer will be documented in this file.
 
+## [0.4.1] - 2026-07-17
+### Added
+- Implemented `ReadFileTool` with workspace restriction, 1MB size threshold limits, and binary checks.
+- Implemented `SearchFilesTool` utilizing glob patterns with `.venv` directories filtering for noise reduction.
+- Implemented `ReadMultipleFilesTool` to retrieve content batches.
+- Implemented `ClipboardTool` utilizing `pyperclip` to support clipboard gets, sets, and clears.
+
 ## [0.4.0] - 2026-07-17
 ### Added
 - Created SQLite structured key-value memory engine package (`app/memory/` containing `models`, `storage`, `retrieval`, and `manager`) storing records inside `data/summer.db`.

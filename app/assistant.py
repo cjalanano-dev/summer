@@ -14,6 +14,10 @@ from app.tools.password import PasswordGeneratorTool
 from app.tools.system_info import SystemInfoTool
 from app.tools.directory_list import DirectoryListTool
 from app.tools.memory_tools import RememberTool, ForgetTool
+from app.tools.read_file import ReadFileTool
+from app.tools.search_files import SearchFilesTool
+from app.tools.read_multiple_files import ReadMultipleFilesTool
+from app.tools.clipboard import ClipboardTool
 from app.memory.manager import MemoryManager
 from app.agent.agent import Agent
 from app.conversation import Conversation
@@ -41,6 +45,12 @@ class Summer:
         # Register Memory tools
         self.tool_registry.register_tool(RememberTool(self.memory))
         self.tool_registry.register_tool(ForgetTool(self.memory))
+        
+        # Register workspace & clipboard tools
+        self.tool_registry.register_tool(ReadFileTool(self.config.project_root))
+        self.tool_registry.register_tool(SearchFilesTool(self.config.project_root))
+        self.tool_registry.register_tool(ReadMultipleFilesTool(self.config.project_root))
+        self.tool_registry.register_tool(ClipboardTool())
         
         self.agent = Agent(self.llm_client, self.tool_registry)
         self.conversation = Conversation(self.config.system_prompt)
