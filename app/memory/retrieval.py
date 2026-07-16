@@ -9,23 +9,40 @@ class MemoryRetrieval:
         pass
 
     def rank_and_select(self, query: str, memories: List[MemoryRecord]) -> List[MemoryRecord]:
-        """Ranks memories by symbolic query relevance (word matches)."""
+        """Ranks and filters memories incorporating project context, top preferences, top goals, and keyword overlaps."""
+        # 1. Gather all 'project' memories
+        projects = [m for m in memories if m.category == "project"]
+        
+        # 2. Gather top 5 'preference' memories sorted by importance desc
+        preferences = sorted(
+            [m for m in memories if m.category == "preference"],
+            key=lambda x: x.importance,
+            reverse=True
+        )[:5]
+        
+        # 3. Gather top 5 'goal' memories sorted by importance desc
+        goals = sorted(
+            [m for m in memories if m.category == "goal"],
+            key=lambda x: x.importance,
+            reverse=True
+        )[:5]
+        
+        # 4. Keyword matches for other category records
+        included_ids = {m.id for m in projects + preferences + goals}
         query_words = set(re.findall(r"\w+", query.lower()))
-        if not query_words:
-            return []
-
-        scored_memories = []
-        for mem in memories:
-            mem_words = set(re.findall(r"\w+", mem.content.lower()))
-            overlap = len(query_words.intersection(mem_words))
-            
-            if mem.category.lower() in query_words:
-                overlap += 2
+        keyword_matches = []
+        
+        if query_words:
+            for mem in memories:
+                if mem.id in included_ids:
+                    continue
+                # Tokenize key and value
+                key_words = set(re.findall(r"\w+", mem.key.lower()))
+                val_words = set(re.findall(r"\w+", mem.value.lower()))
+                combined = key_words.union(val_words)
                 
-            scored_memories.append((overlap, mem))
-        
-        # Sort memories descending by score
-        scored_memories.sort(key=lambda x: x[0], reverse=True)
-        
-        # Return top 5 relevant memories (only if score > 0)
-        return [mem for score, mem in scored_memories if score > 0][:5]
+                if query_words.intersection(combined):
+                    keyword_matches.append(mem)
+                    
+        # Return merged list
+        return list(projects) + list(preferences) + list(goals) + keyword_matches

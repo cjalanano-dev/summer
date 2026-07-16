@@ -133,9 +133,11 @@ def main(ctx: typer.Context):
                 console.print("  [bold green]/model[/bold green]             - Switch active Ollama models interactively")
                 console.print("  [bold green]/config[/bold green]            - Print current application configurations")
                 console.print("  [bold green]/about[/bold green]             - Print information about Project Summer")
-                console.print("  [bold green]/remember <text>[/bold green]   - Manually save a fact to memory")
+                console.print("  [bold green]/remember <category> <key> = <value>[/bold green]   - Manually save a fact to memory")
                 console.print("  [bold green]/forget <id>[/bold green]       - Delete a memory by its ID")
                 console.print("  [bold green]/memory[/bold green]            - List all stored memories")
+                console.print("  [bold green]/search-memory <q>[/bold green] - Search stored memories")
+                console.print("  [bold green]/clear-memory[/bold green]      - Delete all stored memories")
                 console.print("  [bold green]/exit[/bold green]              - Exit the interactive session")
             elif cmd == "/clear":
                 summer.conversation.clear()
@@ -168,11 +170,22 @@ def main(ctx: typer.Context):
                 console.print("  Designed with a modular, agent-ready architecture.")
             elif cmd == "/remember":
                 content = " ".join(parts[1:]).strip()
-                if not content:
-                    console.print("[bold red]Usage: /remember <fact to remember>[/bold red]")
+                if not content or "=" not in content:
+                    console.print("[bold red]Usage: /remember <category> <key> = <value>[/bold red]")
+                    console.print("Example: /remember preference editor = VS Code")
                 else:
-                    mem_id = summer.memory.remember(content, "user_manual")
-                    console.print(f"[bold green]Saved to memory with ID {mem_id}.[/bold green]")
+                    try:
+                        left, right = content.split("=", 1)
+                        value = right.strip()
+                        left_parts = left.strip().split(None, 1)
+                        if len(left_parts) < 2:
+                            console.print("[bold red]Usage: /remember <category> <key> = <value>[/bold red]")
+                        else:
+                            category, key = left_parts
+                            mem_id = summer.memory.remember(category, key, value)
+                            console.print(f"[bold green]Saved to memory (ID: {mem_id}) under category '{category.lower()}'.[/bold green]")
+                    except Exception as e:
+                        console.print(f"[bold red]Error saving memory: {str(e)}[/bold red]")
             elif cmd == "/forget":
                 if len(parts) < 2:
                     console.print("[bold red]Usage: /forget <memory_id>[/bold red]")
@@ -187,19 +200,46 @@ def main(ctx: typer.Context):
                     except ValueError:
                         console.print("[bold red]Error: Memory ID must be an integer.[/bold red]")
             elif cmd in ("/memory", "/memories"):
-                from rich.table import Table
                 memories = summer.memory.list_memories()
                 if not memories:
                     console.print("[dim]No memories stored yet.[/dim]")
                 else:
-                    table = Table(title="Stored Memories", show_header=True, header_style="bold blue")
-                    table.add_column("ID", style="dim", width=6)
-                    table.add_column("Category", style="bold green", width=15)
-                    table.add_column("Content")
-                    table.add_column("Created At", style="dim", width=25)
+                    grouped = {}
                     for m in memories:
-                        table.add_row(str(m.id), m.category, m.content, m.created_at)
-                    console.print(table)
+                        cat = m.category.capitalize()
+                        if cat not in grouped:
+                            grouped[cat] = []
+                        grouped[cat].append(m)
+                    
+                    console.print("\n[bold blue]Summer Memory[/bold blue]\n")
+                    for cat, items in grouped.items():
+                        console.print(f"[bold green]{cat}[/bold green]")
+                        console.print(f"[dim]{'-' * len(cat)}[/dim]")
+                        for m in items:
+                            console.print(f"  [bold cyan]{m.key}[/bold cyan] (ID: {m.id})")
+                            console.print(f"  {m.value}\n")
+            elif cmd == "/search-memory":
+                q = " ".join(parts[1:]).strip()
+                if not q:
+                    console.print("[bold red]Usage: /search-memory <query>[/bold red]")
+                else:
+                    from rich.table import Table
+                    results = summer.memory.search(q)
+                    if not results:
+                        console.print(f"[dim]No memories matching '{q}' found.[/dim]")
+                    else:
+                        table = Table(title=f"Memory Search Results: '{q}'", show_header=True, header_style="bold blue")
+                        table.add_column("ID", style="dim", width=6)
+                        table.add_column("Category", style="bold green", width=15)
+                        table.add_column("Key", style="bold cyan", width=15)
+                        table.add_column("Value")
+                        table.add_column("Importance", style="dim", width=12)
+                        for m in results:
+                            table.add_row(str(m.id), m.category.capitalize(), m.key, m.value, str(m.importance))
+                        console.print(table)
+            elif cmd == "/clear-memory":
+                summer.memory.clear_all()
+                console.print("[bold green]All stored memories deleted.[/bold green]")
             continue
             
         run_chat(user_input, summer)

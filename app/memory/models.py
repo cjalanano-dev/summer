@@ -2,8 +2,11 @@ from dataclasses import dataclass
 
 @dataclass
 class MemoryRecord:
-    """Represents a single symbolic memory fact stored in SQLite."""
+    """Represents a single structured symbolic memory fact stored in SQLite."""
     id: int
     category: str
-    content: str
+    key: str
+    value: str
+    importance: int
     created_at: str
+    updated_at: str

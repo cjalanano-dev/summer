@@ -1,5 +1,7 @@
 import os
 import datetime
+import json
+import re
 from typing import Generator, Tuple
 from app.config import Config
 from app.llm import LLMClient
@@ -34,7 +36,7 @@ class Summer:
         self.tool_registry.register_tool(DirectoryListTool())
         
         # Initialize Memory Subsystem
-        self.memory = MemoryManager(os.path.join(self.config.project_root, "data", "memory.db"))
+        self.memory = MemoryManager(os.path.join(self.config.project_root, "data", "summer.db"))
         
         # Register Memory tools
         self.tool_registry.register_tool(RememberTool(self.memory))
@@ -82,3 +84,53 @@ class Summer:
             self.conversation.add_assistant(response_str)
             # Log assistant response
             self._log_interaction("summer", response_str)
+            
+            # 3. Analyze exchange and automatically extract memories
+            self._extract_and_store_memory_async(prompt, response_str)
+
+    def _extract_and_store_memory_async(self, user_msg: str, assistant_msg: str):
+        """Analyze the exchange and automatically extract structured long-term memories."""
+        system_prompt = (
+            "You are Summer's Automatic Memory Extraction Agent. Your job is to analyze the dialogue exchange "
+            "and determine if the user has shared any new facts, preferences, goals, project info, routines, "
+            "reminders, or details about people that are worth saving for long-term reference.\n\n"
+            "INSTRUCTIONS:\n"
+            "You must output a single, valid JSON block matching one of the following two schemas:\n\n"
+            "If there is nothing new or important to remember, return:\n"
+            "{\n"
+            '  "store": false\n'
+            "}\n\n"
+            "If there is something worth remembering, return:\n"
+            "{\n"
+            '  "store": true,\n'
+            '  "category": "preference" | "person" | "project" | "goal" | "fact" | "routine" | "reminder" | "custom",\n'
+            '  "key": "<short_camelcase_or_snakecase_identifier>",\n'
+            '  "value": "<the_exact_fact_value_to_remember>",\n'
+            '  "importance": <integer_importance_from_1_to_5>\n'
+            "}\n\n"
+            "CRITICAL: Do NOT output any markdown tags (like ```json or ```) or other text. Only return the JSON block."
+        )
+        
+        user_context = f"User message: \"{user_msg}\"\nAssistant response: \"{assistant_msg}\""
+        messages = [
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_context}
+        ]
+        
+        try:
+            response = self.llm_client.chat(messages).strip()
+            if response.startswith("```"):
+                response = re.sub(r"^```(?:json)?\n", "", response)
+                response = re.sub(r"\n```$", "", response)
+            response = response.strip()
+            
+            data = json.loads(response)
+            if isinstance(data, dict) and data.get("store") is True:
+                cat = data.get("category", "custom")
+                key = data.get("key", "")
+                val = data.get("value", "")
+                imp = data.get("importance", 3)
+                if key and val:
+                    self.memory.remember(cat, key, val, imp)
+        except Exception:
+            pass

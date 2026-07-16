@@ -4,11 +4,14 @@ All notable changes to Project Summer will be documented in this file.
 
 ## [0.4.0] - 2026-07-17
 ### Added
-- Created SQLite-based symbolic memory engine package (`app/memory/` containing `models`, `storage`, `retrieval`, and `manager`).
-- Implemented keyword overlap relevance ranking in retrieval to query top relevant facts.
-- Automated memory context injection into LLM active dialogue threads.
-- Implemented `RememberTool` and `ForgetTool` allowing the LLM planner to dynamically manage memories.
-- Added `/memory`, `/remember`, and `/forget` CLI slash commands.
+- Created SQLite structured key-value memory engine package (`app/memory/` containing `models`, `storage`, `retrieval`, and `manager`) storing records inside `data/summer.db`.
+- Expanded `MemoryManager` API to support full programmatic CRUD controls: `remember()`, `forget()`, `update()`, `search()`, `get()`, `list()`, and `retrieve_context()`.
+- Implemented background automatic memory extraction analyzing chat dialogue turns and storing key-value pairs silently.
+- Implemented predefined categories (preference, person, project, goal, fact, routine, reminder, custom) with unique key constraints for automatic upserts.
+- Refactored retrieval matching to boost and prioritize project records, top 5 preferences, and top 5 goals.
+- Expanded forgetting routines to delete by ID, category, or key.
+- Refactored `/memory` command to print category-grouped records.
+- Added `/remember <category> <key> = <value>`, `/forget`, `/search-memory <q>`, and `/clear-memory` CLI slash commands.
 
 ## [0.3.0] - 2026-07-17
 ### Added
