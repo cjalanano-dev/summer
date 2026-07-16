@@ -4,20 +4,20 @@ from typing import List
 import typer
 from dotenv import load_dotenv, set_key
 from rich.console import Console
-from app.conversations.manager import ConversationManager
+from app.assistant import Assistant
 
-# Load configuration from .env file on startup
+# Load configuration on startup
 load_dotenv()
 
 app = typer.Typer(help="Project Summer - Local AI Developer Assistant")
 console = Console()
 
-def run_chat(prompt: str, manager: ConversationManager):
-    """Stream response from Ollama via ConversationManager and print with rich styling."""
+def run_chat(prompt: str, assistant: Assistant):
+    """Stream response from Ollama via Assistant and print with rich styling."""
     console.print("[bold blue]Summer:[/bold blue] ", end="")
     try:
         in_thinking = False
-        for chunk_type, text in manager.send_message(prompt):
+        for chunk_type, text in assistant.send_message(prompt):
             if chunk_type == "thinking":
                 if not in_thinking:
                     console.print("[Thinking: ", style="dim italic", end="", markup=False)
@@ -47,8 +47,8 @@ def main(ctx: typer.Context):
         if hasattr(sys.stderr, 'reconfigure'):
             sys.stderr.reconfigure(encoding='utf-8')
 
-    manager = ConversationManager()
-    current_model = os.environ.get("OLLAMA_MODEL") or "auto-detected"
+    assistant = Assistant()
+    current_model = assistant.config.model_name or "auto-detected"
     
     console.print("[bold blue]╭──────────────────────────────────────────────╮[/bold blue]")
     console.print("[bold blue]│ Project Summer v0.1                          │[/bold blue]")
@@ -69,7 +69,7 @@ def main(ctx: typer.Context):
             console.print("[bold blue]Summer:[/bold blue] Goodbye!")
             break
             
-        run_chat(user_input, manager)
+        run_chat(user_input, assistant)
 
 @app.command()
 def chat(
@@ -82,29 +82,30 @@ def chat(
         if hasattr(sys.stderr, 'reconfigure'):
             sys.stderr.reconfigure(encoding='utf-8')
 
-    manager = ConversationManager()
+    assistant = Assistant()
     prompt_str = " ".join(prompt)
-    run_chat(prompt_str, manager)
+    run_chat(prompt_str, assistant)
 
 @app.command()
 def model():
     """Select the active Ollama model via an interactive table UI."""
-    from app.ollama import get_installed_models
     from rich.table import Table
     
     if sys.platform == "win32":
         if hasattr(sys.stdout, 'reconfigure'):
             sys.stdout.reconfigure(encoding='utf-8')
             
+    assistant = Assistant()
+    
     console.print("\n[bold blue]Scanning for local Ollama models...[/bold blue]\n")
-    models = get_installed_models()
+    models = assistant.llm_client.get_installed_models()
     
     if not models:
         console.print("[bold red]Error: No local Ollama models found.[/bold red]")
         console.print("Please make sure Ollama is running and you have pulled at least one model.")
         raise typer.Exit(code=1)
         
-    current_model = os.environ.get("OLLAMA_MODEL")
+    current_model = assistant.config.model_name
     
     table = Table(title="Available Ollama Models", show_header=True, header_style="bold blue")
     table.add_column("Index", style="dim", width=6)
