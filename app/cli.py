@@ -4,7 +4,7 @@ from typing import List
 import typer
 from dotenv import load_dotenv, set_key
 from rich.console import Console
-from app.assistant import Assistant
+from app.assistant import Summer
 
 # Load configuration on startup
 load_dotenv()
@@ -12,12 +12,12 @@ load_dotenv()
 app = typer.Typer(help="Project Summer - Local AI Developer Assistant")
 console = Console()
 
-def run_chat(prompt: str, assistant: Assistant):
-    """Stream response from Ollama via Assistant and print with rich styling."""
+def run_chat(prompt: str, summer: Summer):
+    """Stream response from Ollama via Summer and print with rich styling."""
     console.print("[bold blue]Summer:[/bold blue] ", end="")
     try:
         in_thinking = False
-        for chunk_type, text in assistant.send_message(prompt):
+        for chunk_type, text in summer.chat(prompt):
             if chunk_type == "thinking":
                 if not in_thinking:
                     console.print("[Thinking: ", style="dim italic", end="", markup=False)
@@ -34,78 +34,19 @@ def run_chat(prompt: str, assistant: Assistant):
     except KeyboardInterrupt:
         console.print("\n[bold red][Stream interrupted][/bold red]")
 
-@app.callback(invoke_without_command=True)
-def main(ctx: typer.Context):
-    """Start Project Summer terminal assistant."""
-    if ctx.invoked_subcommand is not None:
-        return
-
-    # Ensure stdout/stderr are UTF-8 on Windows
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, 'reconfigure'):
-            sys.stdout.reconfigure(encoding='utf-8')
-        if hasattr(sys.stderr, 'reconfigure'):
-            sys.stderr.reconfigure(encoding='utf-8')
-
-    assistant = Assistant()
-    current_model = assistant.config.model_name or "auto-detected"
-    
-    console.print("[bold blue]╭──────────────────────────────────────────────╮[/bold blue]")
-    console.print("[bold blue]│ Project Summer v0.1                          │[/bold blue]")
-    console.print(f"[bold blue]│ Local Terminal Assistant (Model: {current_model:12.12}) │[/bold blue]")
-    console.print("[bold blue]╰──────────────────────────────────────────────╯[/bold blue]")
-    console.print("Type your message and press Enter. Type 'exit' or 'quit' to exit.")
-    
-    while True:
-        try:
-            user_input = console.input("\n[bold green]You:[/bold green] ").strip()
-        except (KeyboardInterrupt, EOFError):
-            console.print("\n[bold blue]Summer:[/bold blue] Goodbye!")
-            break
-        
-        if not user_input:
-            continue
-        if user_input.lower() in ("exit", "quit"):
-            console.print("[bold blue]Summer:[/bold blue] Goodbye!")
-            break
-            
-        run_chat(user_input, assistant)
-
-@app.command()
-def chat(
-    prompt: List[str] = typer.Argument(..., help="The prompt to send to Summer.")
-):
-    """Send a single prompt query to Summer."""
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, 'reconfigure'):
-            sys.stdout.reconfigure(encoding='utf-8')
-        if hasattr(sys.stderr, 'reconfigure'):
-            sys.stderr.reconfigure(encoding='utf-8')
-
-    assistant = Assistant()
-    prompt_str = " ".join(prompt)
-    run_chat(prompt_str, assistant)
-
-@app.command()
-def model():
-    """Select the active Ollama model via an interactive table UI."""
+def change_model_interactive(summer: Summer):
+    """Interactive helper to switch local Ollama models."""
     from rich.table import Table
     
-    if sys.platform == "win32":
-        if hasattr(sys.stdout, 'reconfigure'):
-            sys.stdout.reconfigure(encoding='utf-8')
-            
-    assistant = Assistant()
-    
     console.print("\n[bold blue]Scanning for local Ollama models...[/bold blue]\n")
-    models = assistant.llm_client.get_installed_models()
+    models = summer.llm_client.get_installed_models()
     
     if not models:
         console.print("[bold red]Error: No local Ollama models found.[/bold red]")
         console.print("Please make sure Ollama is running and you have pulled at least one model.")
-        raise typer.Exit(code=1)
+        return
         
-    current_model = assistant.config.model_name
+    current_model = summer.config.model_name
     
     table = Table(title="Available Ollama Models", show_header=True, header_style="bold blue")
     table.add_column("Index", style="dim", width=6)
@@ -136,12 +77,122 @@ def model():
             # Save key in .env file
             set_key(env_path, "OLLAMA_MODEL", selected_model)
             os.environ["OLLAMA_MODEL"] = selected_model
+            summer.config.model_name = selected_model
             
             console.print(f"\n[bold green]Success![/bold green] Active model set to: [bold cyan]{selected_model}[/bold cyan]")
         else:
             console.print("[bold red]Error: Invalid selection index.[/bold red]")
     except ValueError:
         console.print("[bold red]Error: Please enter a valid number.[/bold red]")
+
+@app.callback(invoke_without_command=True)
+def main(ctx: typer.Context):
+    """Start Project Summer terminal assistant."""
+    if ctx.invoked_subcommand is not None:
+        return
+
+    # Ensure stdout/stderr are UTF-8 on Windows
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        if hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8')
+
+    summer = Summer()
+    current_model = summer.config.model_name or "auto-detected"
+    
+    console.print("[bold blue]╭──────────────────────────────────────────────╮[/bold blue]")
+    console.print("[bold blue]│ Project Summer v0.1                          │[/bold blue]")
+    console.print(f"[bold blue]│ Local Terminal Assistant (Model: {current_model:12.12}) │[/bold blue]")
+    console.print("[bold blue]╰──────────────────────────────────────────────╯[/bold blue]")
+    console.print("Type your message and press Enter. Type /help to see commands, or /exit to exit.")
+    
+    while True:
+        try:
+            user_input = console.input("\n[bold green]You:[/bold green] ").strip()
+        except (KeyboardInterrupt, EOFError):
+            console.print("\n[bold blue]Summer:[/bold blue] Goodbye!")
+            break
+        
+        if not user_input:
+            continue
+
+        # Intercept Slash Commands
+        if user_input.startswith("/"):
+            parts = user_input.split()
+            cmd = parts[0].lower()
+            
+            if cmd == "/exit":
+                console.print("[bold blue]Summer:[/bold blue] Goodbye!")
+                break
+            elif cmd == "/help":
+                console.print("\n[bold blue]Available Slash Commands:[/bold blue]")
+                console.print("  [bold green]/help[/bold green]    - Show this help message")
+                console.print("  [bold green]/clear[/bold green]   - Clear the console and reset conversation history")
+                console.print("  [bold green]/history[/bold green] - Display the conversation history so far")
+                console.print("  [bold green]/model[/bold green]   - Switch active Ollama models interactively")
+                console.print("  [bold green]/config[/bold green]  - Print current application configurations")
+                console.print("  [bold green]/about[/bold green]   - Print information about Project Summer")
+                console.print("  [bold green]/exit[/bold green]    - Exit the interactive session")
+            elif cmd == "/clear":
+                summer.conversation.clear()
+                os.system('cls' if os.name == 'nt' else 'clear')
+                console.print("[bold green]Conversation history cleared and screen reset.[/bold green]")
+            elif cmd == "/history":
+                console.print("\n[bold blue]Conversation History:[/bold blue]\n")
+                if not summer.conversation.messages or len(summer.conversation.messages) <= 1:
+                    console.print("[dim]No messages in history yet.[/dim]")
+                else:
+                    for msg in summer.conversation.messages:
+                        role = msg["role"]
+                        content = msg["content"]
+                        if role == "system":
+                            continue
+                        style = "bold green" if role == "user" else "bold blue"
+                        name = "You" if role == "user" else "Summer"
+                        console.print(f"[{style}]{name}:[/{style}] {content}")
+            elif cmd == "/model":
+                change_model_interactive(summer)
+            elif cmd == "/config":
+                console.print("\n[bold blue]Configurations:[/bold blue]")
+                console.print(f"  [bold]Active Model:[/bold] {summer.config.model_name or 'auto-detected'}")
+                current_dir = os.path.dirname(os.path.abspath(__file__))
+                prompt_path = os.path.join(current_dir, "prompts", "system.txt")
+                console.print(f"  [bold]System Prompt Path:[/bold] {prompt_path}")
+            elif cmd == "/about":
+                console.print("\n[bold blue]About Project Summer:[/bold blue]")
+                console.print("  A terminal-native local AI developer assistant running on Ollama.")
+                console.print("  Designed with a modular, agent-ready architecture.")
+            else:
+                console.print(f"[bold red]Unknown command: {cmd}. Type /help for a list of commands.[/bold red]")
+            continue
+            
+        run_chat(user_input, summer)
+
+@app.command()
+def chat(
+    prompt: List[str] = typer.Argument(..., help="The prompt to send to Summer.")
+):
+    """Send a single prompt query to Summer."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+        if hasattr(sys.stderr, 'reconfigure'):
+            sys.stderr.reconfigure(encoding='utf-8')
+
+    summer = Summer()
+    prompt_str = " ".join(prompt)
+    run_chat(prompt_str, summer)
+
+@app.command()
+def model():
+    """Select the active Ollama model via an interactive table UI."""
+    if sys.platform == "win32":
+        if hasattr(sys.stdout, 'reconfigure'):
+            sys.stdout.reconfigure(encoding='utf-8')
+            
+    summer = Summer()
+    change_model_interactive(summer)
 
 if __name__ == "__main__":
     app()

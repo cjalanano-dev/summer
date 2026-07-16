@@ -39,10 +39,14 @@ class LLMClient:
                 model = "qwen2.5:latest"
 
         try:
+            options = {
+                "temperature": self.config.temperature
+            }
             stream = ollama.chat(
                 model=model,
                 messages=messages,
-                stream=True,
+                stream=self.config.stream,
+                options=options
             )
             for chunk in stream:
                 message = chunk.get('message', {})

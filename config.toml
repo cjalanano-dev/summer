@@ -1,0 +1,7 @@
+# Project Summer Configuration Settings
+
+default_model = "minimax-m3:cloud"
+temperature = 0.7
+system_prompt = "app/prompts/system.txt"
+stream = true
+theme = "dark"
