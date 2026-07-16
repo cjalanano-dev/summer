@@ -61,3 +61,34 @@ class LLMClient:
                     yield "content", content
         except Exception as e:
             yield "content", f"Error: {str(e)}\n"
+
+    def chat(self, messages: List[Dict[str, str]], model: str = None) -> str:
+        """Send a message thread to Ollama and return the full text response (non-streaming)."""
+        if not model:
+            model = self.config.model_name
+            
+        if not model:
+            models = self.get_installed_models()
+            if models:
+                preferred = ["qwen", "llama", "gemma", "deepseek"]
+                selected = None
+                for p in preferred:
+                    for m in models:
+                        if p in m.lower():
+                            selected = m
+                            break
+                    if selected:
+                        break
+                model = selected if selected else models[0]
+            else:
+                model = "qwen2.5:latest"
+
+        try:
+            response = ollama.chat(
+                model=model,
+                messages=messages,
+                options={"temperature": 0.0}  # Low temp for planning accuracy
+            )
+            return response.get('message', {}).get('content', '').strip()
+        except Exception:
+            return ""

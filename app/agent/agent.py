@@ -10,7 +10,7 @@ class Agent:
     def __init__(self, llm_client: LLMClient, tool_registry: ToolRegistry):
         self.llm_client = llm_client
         self.tool_registry = tool_registry
-        self.planner = Planner()
+        self.planner = Planner(self.llm_client)
         self.executor = Executor(self.tool_registry)
 
     def run_loop(self, prompt: str, history: List[Dict[str, str]]) -> Generator[Tuple[str, str], None, None]:

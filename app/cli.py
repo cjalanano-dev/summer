@@ -127,13 +127,16 @@ def main(ctx: typer.Context):
                 break
             elif cmd == "/help":
                 console.print("\n[bold blue]Available Slash Commands:[/bold blue]")
-                console.print("  [bold green]/help[/bold green]    - Show this help message")
-                console.print("  [bold green]/clear[/bold green]   - Clear the console and reset conversation history")
-                console.print("  [bold green]/history[/bold green] - Display the conversation history so far")
-                console.print("  [bold green]/model[/bold green]   - Switch active Ollama models interactively")
-                console.print("  [bold green]/config[/bold green]  - Print current application configurations")
-                console.print("  [bold green]/about[/bold green]   - Print information about Project Summer")
-                console.print("  [bold green]/exit[/bold green]    - Exit the interactive session")
+                console.print("  [bold green]/help[/bold green]              - Show this help message")
+                console.print("  [bold green]/clear[/bold green]             - Clear the console and reset conversation history")
+                console.print("  [bold green]/history[/bold green]           - Display the conversation history so far")
+                console.print("  [bold green]/model[/bold green]             - Switch active Ollama models interactively")
+                console.print("  [bold green]/config[/bold green]            - Print current application configurations")
+                console.print("  [bold green]/about[/bold green]             - Print information about Project Summer")
+                console.print("  [bold green]/remember <text>[/bold green]   - Manually save a fact to memory")
+                console.print("  [bold green]/forget <id>[/bold green]       - Delete a memory by its ID")
+                console.print("  [bold green]/memory[/bold green]            - List all stored memories")
+                console.print("  [bold green]/exit[/bold green]              - Exit the interactive session")
             elif cmd == "/clear":
                 summer.conversation.clear()
                 os.system('cls' if os.name == 'nt' else 'clear')
@@ -163,8 +166,40 @@ def main(ctx: typer.Context):
                 console.print("\n[bold blue]About Project Summer:[/bold blue]")
                 console.print("  A terminal-native local AI developer assistant running on Ollama.")
                 console.print("  Designed with a modular, agent-ready architecture.")
-            else:
-                console.print(f"[bold red]Unknown command: {cmd}. Type /help for a list of commands.[/bold red]")
+            elif cmd == "/remember":
+                content = " ".join(parts[1:]).strip()
+                if not content:
+                    console.print("[bold red]Usage: /remember <fact to remember>[/bold red]")
+                else:
+                    mem_id = summer.memory.remember(content, "user_manual")
+                    console.print(f"[bold green]Saved to memory with ID {mem_id}.[/bold green]")
+            elif cmd == "/forget":
+                if len(parts) < 2:
+                    console.print("[bold red]Usage: /forget <memory_id>[/bold red]")
+                else:
+                    try:
+                        mem_id = int(parts[1])
+                        success = summer.memory.forget(mem_id)
+                        if success:
+                            console.print(f"[bold green]Deleted memory with ID {mem_id}.[/bold green]")
+                        else:
+                            console.print(f"[bold red]Memory with ID {mem_id} not found.[/bold red]")
+                    except ValueError:
+                        console.print("[bold red]Error: Memory ID must be an integer.[/bold red]")
+            elif cmd in ("/memory", "/memories"):
+                from rich.table import Table
+                memories = summer.memory.list_memories()
+                if not memories:
+                    console.print("[dim]No memories stored yet.[/dim]")
+                else:
+                    table = Table(title="Stored Memories", show_header=True, header_style="bold blue")
+                    table.add_column("ID", style="dim", width=6)
+                    table.add_column("Category", style="bold green", width=15)
+                    table.add_column("Content")
+                    table.add_column("Created At", style="dim", width=25)
+                    for m in memories:
+                        table.add_row(str(m.id), m.category, m.content, m.created_at)
+                    console.print(table)
             continue
             
         run_chat(user_input, summer)
