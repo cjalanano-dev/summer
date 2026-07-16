@@ -26,6 +26,9 @@ def get_installed_models() -> List[str]:
 def stream_chat(prompt: str, model: str = None) -> Generator[Tuple[str, str], None, None]:
     """Send a prompt to Ollama and yield (chunk_type, text) response stream."""
     if not model:
+        model = os.environ.get("OLLAMA_MODEL")
+        
+    if not model:
         models = get_installed_models()
         if models:
             # Prioritize standard models
