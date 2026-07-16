@@ -21,3 +21,104 @@ I'd be happy to help with that! To create a useful test log, I just need a bit m
 
 Just confirm the path and format, and I'll create it for you. Or tell me what you actually had in mind if "test log creation" means something different (e.g., logging in code, a system log, etc.).
 
+[06:56]
+User:
+What is 27 * 43?
+
+[06:56]
+Summer:
+27 × 43 = **1,161**
+
+[06:56]
+User:
+What time is it?
+
+[06:56]
+Summer:
+It's 6:56 AM on Friday, July 17, 2026. Early morning — perfect time to get a head start on the day! ☕ Is there anything I can help you with?
+
+[06:56]
+User:
+Show my system info
+
+[06:56]
+Summer:
+Here's your system info at a glance:
+
+🖥️ **Operating System**
+- **OS:** Windows 11 (Build 26200)
+
+⚙️ **Processor**
+- **Architecture:** AMD64 (64-bit)
+- **Cores:** 8
+
+💾 **Disk Usage**
+- **Total:** 237.85 GB
+- **Used:** 211.51 GB (~89%)
+- **Free:** 26.33 GB
+
+⚠️ **Heads up:** Your disk is getting fairly full — only about 26 GB free. You might want to consider cleaning up some files, uninstalling unused programs, or running Disk Cleanup. Want me to help you find large files or temp folders to free up space?
+
+[06:56]
+User:
+List the files in the current folder
+
+[06:56]
+Summer:
+I'll run a quick command to list the files in the current directory.
+
+**Command:** `ls -la`
+
+This will show all files and folders (including hidden ones) along with their permissions, sizes, and modification dates.
+
+> Note: If you're on Windows, let me know and I'll use `dir` instead. Otherwise, `ls` should work in most Unix-like shells (macOS, Linux, WSL, Git Bash).
+
+[06:57]
+User:
+List the files in the current folder
+
+[06:57]
+Summer:
+I'll list the files in the current folder for you.</mm:think>{"name": "directory_list", "arguments": {"path": "."}}
+
+[06:57]
+User:
+List the files in the current folder
+
+[06:57]
+Summer:
+I'll list the files in the current directory for you.
+
+[06:57]
+User:
+List the files in the current folder
+
+[06:57]
+Summer:
+Here's what's in your project folder `C:\Users\mrztdsh\Projects\Personal\summer`:
+
+**Files**
+- `.env` (33 bytes)
+- `.gitignore` (0 bytes)
+- `README.md` (0 bytes)
+- `config.toml` (164 bytes)
+- `pyproject.toml` (420 bytes)
+- `requirements.md` (0 bytes)
+
+**Directories**
+- `.git`
+- `.venv`
+- `app`
+- `data`
+- `docs`
+- `logs`
+- `summer.egg-info`
+
+This looks like a Python project (given the `pyproject.toml` and `.egg-info` folder). A few things stand out:
+
+- 📝 **Empty placeholder files**: `README.md`, `requirements.md`, and `.gitignore` are all 0 bytes — you'll probably want to fill those in.
+- 🔒 **`.env` exists**: Good. Just make sure it's listed in `.gitignore` so it doesn't get committed.
+- 📦 **Virtual environment present**: `.venv/` is already set up.
+
+Want me to help with anything specific — like writing a proper `README.md`, setting up a `.gitignore`, or inspecting what's inside `app/` or `config.toml`?
+

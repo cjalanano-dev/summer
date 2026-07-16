@@ -3,7 +3,14 @@ import datetime
 from typing import Generator, Tuple
 from app.config import Config
 from app.llm import LLMClient
-from app.tools.manager import ToolManager
+from app.tools.registry import ToolRegistry
+from app.tools.calculator import CalculatorTool
+from app.tools.current_time import CurrentTimeTool
+from app.tools.random_number import RandomNumberTool
+from app.tools.uuid_gen import UUIDGeneratorTool
+from app.tools.password import PasswordGeneratorTool
+from app.tools.system_info import SystemInfoTool
+from app.tools.directory_list import DirectoryListTool
 from app.agent.agent import Agent
 from app.conversation import Conversation
 
@@ -13,8 +20,18 @@ class Summer:
     def __init__(self):
         self.config = Config()
         self.llm_client = LLMClient(self.config)
-        self.tool_manager = ToolManager()
-        self.agent = Agent(self.llm_client, self.tool_manager)
+        self.tool_registry = ToolRegistry()
+        
+        # Register default tool plugins
+        self.tool_registry.register_tool(CalculatorTool())
+        self.tool_registry.register_tool(CurrentTimeTool())
+        self.tool_registry.register_tool(RandomNumberTool())
+        self.tool_registry.register_tool(UUIDGeneratorTool())
+        self.tool_registry.register_tool(PasswordGeneratorTool())
+        self.tool_registry.register_tool(SystemInfoTool())
+        self.tool_registry.register_tool(DirectoryListTool())
+        
+        self.agent = Agent(self.llm_client, self.tool_registry)
         self.conversation = Conversation(self.config.system_prompt)
 
     def _log_interaction(self, role: str, content: str):

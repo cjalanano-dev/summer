@@ -1,8 +1,8 @@
 from typing import Dict, Any, List
 from app.tools.base import BaseTool
 
-class ToolManager:
-    """Manages system tools, their registration, schemas, and execution."""
+class ToolRegistry:
+    """Registry that holds, describes, and dispatches executable tools."""
     
     def __init__(self):
         self._tools: Dict[str, BaseTool] = {}

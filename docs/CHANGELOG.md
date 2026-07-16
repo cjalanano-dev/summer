@@ -2,6 +2,13 @@
 
 All notable changes to Project Summer will be documented in this file.
 
+## [0.3.0] - 2026-07-17
+### Added
+- Created unified `ToolRegistry` (replacing the old `ToolManager`) to register and dispatch `BaseTool` instances.
+- Implemented 5 safe, isolated tool plugins: Calculator, Current Time, Random Number, UUID Generator, and Password Generator.
+- Implemented 2 system tools: System Info and Directory List Explorer.
+- Refactored Agent execution loops (`Planner`, `Executor`, and `Agent`) to support rule-based tool routing, execution dispatch, and context notice injection.
+
 ## [0.2.0] - 2026-07-16
 ### Added
 - Created unified `Summer` coordinator class.
