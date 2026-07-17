@@ -1,14 +1,30 @@
-import React, { useRef, useEffect } from "react";
+import { useEffect, useRef } from "react";
 
-export default function InputBox({ onSend, disabled }) {
+export default function InputBox({ onSend, disabled, currentModel, models, modelLoading, onModelChange }) {
   const textareaRef = useRef(null);
+  const activeModel = currentModel || models[0] || "qwen2.5:latest";
+
+  useEffect(() => {
+    const node = textareaRef.current;
+    if (!node) return;
+    node.style.height = "0px";
+    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+  }, []);
+
+  const adjustHeight = () => {
+    const node = textareaRef.current;
+    if (!node) return;
+    node.style.height = "0px";
+    node.style.height = `${Math.min(node.scrollHeight, 160)}px`;
+  };
 
   const handleSubmit = (e) => {
     e?.preventDefault();
-    const val = textareaRef.current?.value.strip ? textareaRef.current?.value.trim() : textareaRef.current?.value;
+    const val = textareaRef.current?.value.trim();
     if (val && !disabled) {
       onSend(val);
       if (textareaRef.current) textareaRef.current.value = "";
+      adjustHeight();
     }
   };
 
@@ -20,23 +36,51 @@ export default function InputBox({ onSend, disabled }) {
   };
 
   return (
-    <div className="p-4 bg-gray-900 border-t border-gray-800">
-      <form onSubmit={handleSubmit} className="max-w-3xl mx-auto flex gap-3 relative">
-        <textarea
-          ref={textareaRef}
-          onKeyDown={handleKeyDown}
-          placeholder={disabled ? "Please wait..." : "Type your message..."}
-          disabled={disabled}
-          rows={1}
-          className="flex-1 bg-gray-950 text-white placeholder-gray-500 rounded-xl px-4 py-3 pr-12 focus:outline-none focus:ring-2 focus:ring-blue-600 border border-gray-800 resize-none max-h-36 min-h-[48px]"
-        />
-        <button
-          type="submit"
-          disabled={disabled}
-          className="absolute right-3 bottom-3 p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white disabled:opacity-55 disabled:hover:bg-blue-600 transition duration-150"
-        >
-          🛩️
-        </button>
+    <div className="border-t border-white/10 bg-slate-950/70 backdrop-blur-xl px-4 pb-4 pt-3 sm:px-6 lg:px-8">
+      <form onSubmit={handleSubmit} className="mx-auto w-full max-w-6xl">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-3 shadow-2xl shadow-black/20">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-3 px-1">
+            <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-gray-300">
+              <span className="uppercase tracking-[0.24em] text-gray-500">Model</span>
+              <select
+                value={activeModel}
+                onChange={(e) => onModelChange(e.target.value)}
+                disabled={modelLoading || !models.length}
+                className="bg-transparent text-sm text-white outline-none disabled:opacity-50"
+              >
+                {(models.length ? models : [activeModel]).map((model) => (
+                  <option key={model} value={model}>
+                    {model}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="text-xs text-gray-500">
+              {modelLoading ? "Loading models..." : `${models.length || 1} available model${(models.length || 1) === 1 ? "" : "s"}`}
+            </div>
+          </div>
+
+          <div className="flex items-end gap-3">
+            <textarea
+              ref={textareaRef}
+              onChange={adjustHeight}
+              onKeyDown={handleKeyDown}
+              placeholder={disabled ? "Please wait..." : "Ask Summer anything..."}
+              disabled={disabled}
+              rows={1}
+              className="min-h-[56px] flex-1 resize-none rounded-2xl border border-white/10 bg-slate-950/80 px-4 py-4 text-[15px] leading-6 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-sky-500/40"
+            />
+            <button
+              type="submit"
+              disabled={disabled}
+              className="inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white text-slate-950 transition hover:scale-[1.02] disabled:cursor-not-allowed disabled:opacity-40"
+              aria-label="Send message"
+            >
+              ↗
+            </button>
+          </div>
+        </div>
       </form>
     </div>
   );

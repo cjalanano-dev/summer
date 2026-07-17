@@ -1,3 +1,6 @@
+import ReactMarkdown from "react-markdown";
+import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
+import { oneDark } from "react-syntax-highlighter/dist/esm/styles/prism";
 import ToolBadge from "./ToolBadge";
 
 function parseMessageContent(content) {
@@ -43,45 +46,76 @@ export default function Message({ role, content, toolCalls }) {
   const isUser = role === "user";
   const { thinking, reply } = parseMessageContent(content);
 
+  const markdownComponents = {
+    code({ inline, className, children, ...props }) {
+      const match = /language-(\w+)/.exec(className || "");
+
+      if (!inline && match) {
+        return (
+          <SyntaxHighlighter
+            style={oneDark}
+            language={match[1]}
+            PreTag="div"
+            customStyle={{ margin: 0, borderRadius: "0.75rem" }}
+            {...props}
+          >
+            {String(children).replace(/\n$/, "")}
+          </SyntaxHighlighter>
+        );
+      }
+
+      return (
+        <code className={className} {...props}>
+          {children}
+        </code>
+      );
+    },
+  };
+
   return (
-    <div className={`py-6 px-4 md:px-8 border-b border-gray-900 ${isUser ? "bg-gray-950" : "bg-gray-900/60"}`}>
-      <div className="max-w-3xl mx-auto flex gap-4">
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm ${isUser ? "bg-blue-600 text-white" : "bg-purple-600 text-white"}`}>
-          {isUser ? "U" : "S"}
-        </div>
-        
-        <div className="flex-1 space-y-3">
-          <div className="text-sm font-semibold text-gray-400 capitalize">
-            {isUser ? "You" : "Summer"}
+    <div className="px-4 py-4 sm:px-0">
+      <div className={`group rounded-[1.75rem] border border-white/10 px-4 py-4 shadow-sm transition ${isUser ? "bg-white/[0.02]" : "bg-white/[0.04]"}`}>
+        <div className="flex gap-4">
+          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl text-sm font-semibold ${isUser ? "bg-sky-500 text-white" : "bg-white/10 text-white"}`}>
+            {isUser ? "U" : "S"}
           </div>
-          
-          {toolCalls && toolCalls.length > 0 && (
-            <div className="flex flex-wrap gap-2 py-1">
-              {toolCalls.map((tc, idx) => (
-                <ToolBadge key={idx} name={tc.function?.name || tc.name} />
-              ))}
+          <div className="min-w-0 flex-1 space-y-3">
+            <div className="text-xs font-medium uppercase tracking-[0.28em] text-gray-500">
+              {isUser ? "You" : "Summer"}
             </div>
-          )}
 
-          {thinking && (
-            <details open={!reply} className="group border border-gray-800 bg-gray-950/40 rounded-lg overflow-hidden">
-              <summary className="flex items-center justify-between px-4 py-2.5 text-xs font-medium text-gray-400 cursor-pointer hover:bg-gray-800/30 select-none">
-                <span className="flex items-center gap-2">
-                  <span className={`w-1.5 h-1.5 rounded-full bg-purple-500 ${!reply ? "animate-pulse" : ""}`}></span>
-                  Thinking Process
-                </span>
-                <span className="transition-transform duration-200 group-open:rotate-180 text-[10px]">
-                  ▼
-                </span>
-              </summary>
-              <div className="px-4 pb-3 pt-1 text-xs text-gray-500 border-t border-gray-900 whitespace-pre-wrap font-mono leading-relaxed">
-                {thinking}
+            {toolCalls && toolCalls.length > 0 && (
+              <div className="flex flex-wrap gap-2 py-0.5">
+                {toolCalls.map((tc, idx) => (
+                  <ToolBadge key={idx} name={tc.function?.name || tc.name} />
+                ))}
               </div>
-            </details>
-          )}
+            )}
 
-          <div className="text-gray-100 leading-relaxed whitespace-pre-wrap text-sm md:text-base">
-            {reply || (!thinking && <span className="text-gray-500 italic">Thinking...</span>)}
+            {thinking && (
+              <details open={!reply} className="overflow-hidden rounded-2xl border border-white/10 bg-black/20">
+                <summary className="flex cursor-pointer items-center justify-between px-4 py-2.5 text-xs font-medium text-gray-400 select-none hover:bg-white/[0.03]">
+                  <span className="flex items-center gap-2">
+                    <span className={`h-1.5 w-1.5 rounded-full bg-sky-400 ${!reply ? "animate-pulse" : ""}`}></span>
+                    Thinking
+                  </span>
+                  <span className="text-[10px] transition-transform duration-200 group-open:rotate-180">
+                    ▼
+                  </span>
+                </summary>
+                <div className="border-t border-white/10 px-4 pb-3 pt-2 text-xs leading-relaxed text-gray-500 whitespace-pre-wrap">
+                  {thinking}
+                </div>
+              </details>
+            )}
+
+            <div className="prose prose-invert max-w-none prose-sm text-gray-100 prose-p:my-2 prose-pre:p-0 prose-pre:bg-transparent prose-code:text-inherit">
+              {reply ? (
+                <ReactMarkdown components={markdownComponents}>{reply}</ReactMarkdown>
+              ) : (
+                !thinking && <span className="text-gray-500 italic">Thinking...</span>
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -4,13 +4,16 @@ backend/main.py
 FastAPI application entry point.
 
 Run with:
+    uvicorn main:app --reload
+
+If you start Uvicorn from the repository root, use:
     uvicorn main:app --app-dir backend --reload
 """
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import health, chat, memory, workspace
+from app.api import health, chat, memory, workspace, models
 
 app = FastAPI(
     title="Summer API",
@@ -33,5 +36,6 @@ app.add_middleware(
 # Register routers
 app.include_router(health.router)
 app.include_router(chat.router)
+app.include_router(models.router)
 app.include_router(memory.router)
 app.include_router(workspace.router)

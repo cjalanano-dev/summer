@@ -77,7 +77,7 @@ class Summer:
         except Exception:
             pass
 
-    def chat(self, prompt: str) -> Generator[Tuple[str, str], None, None]:
+    def chat(self, prompt: str, model: str = None) -> Generator[Tuple[str, str], None, None]:
         """Send a user message, yield response chunks, and update persistent history."""
         # Log user query
         self._log_interaction("user", prompt)
@@ -94,7 +94,7 @@ class Summer:
 
         # 1. Run agent loop with current query and conversation history
         full_response = []
-        for chunk_type, text in self.agent.run_loop(prompt, temp_messages):
+        for chunk_type, text in self.agent.run_loop(prompt, temp_messages, model=model):
             yield chunk_type, text
             if chunk_type == "content":
                 full_response.append(text)

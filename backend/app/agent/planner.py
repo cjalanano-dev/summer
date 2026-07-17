@@ -9,7 +9,7 @@ class Planner:
     def __init__(self, llm_client: LLMClient):
         self.llm_client = llm_client
 
-    def create_plan(self, prompt: str, history: List[Dict[str, str]], tools: List[Dict[str, Any]]) -> Dict[str, Any]:
+    def create_plan(self, prompt: str, history: List[Dict[str, str]], tools: List[Dict[str, Any]], model: str = None) -> Dict[str, Any]:
         """Examines the prompt and context to construct an execution plan using LLM routing."""
         # 1. Format the descriptions and properties of all tools
         tools_desc = []
@@ -59,7 +59,7 @@ class Planner:
         ]
         
         # 4. Call LLM (Planner calls with low temperature for stability)
-        response_text = self.llm_client.chat(messages).strip()
+        response_text = self.llm_client.chat(messages, model=model).strip()
         
         # 5. Clean up markdown JSON formatting if the model outputs it despite instructions
         clean_text = response_text

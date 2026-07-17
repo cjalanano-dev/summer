@@ -1,9 +1,8 @@
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from typing import List, Dict, Any, Optional
+from typing import List, Optional
 import json
-import asyncio
 
 from app.services.assistant_service import get_assistant
 
@@ -17,6 +16,7 @@ class MessageModel(BaseModel):
 
 class ChatRequest(BaseModel):
     messages: List[MessageModel]
+    model: Optional[str] = None
 
 
 @router.post("")
@@ -39,7 +39,7 @@ def chat(request: ChatRequest):
     def event_generator():
         try:
             # We call the generator from assistant which yields (chunk_type, text)
-            generator = assistant.chat(prompt)
+            generator = assistant.chat(prompt, model=request.model)
             for chunk_type, text in generator:
                 if chunk_type == "content":
                     yield f"data: {json.dumps({'content': text})}\n\n"

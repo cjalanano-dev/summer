@@ -13,11 +13,11 @@ class Agent:
         self.planner = Planner(self.llm_client)
         self.executor = Executor(self.tool_registry)
 
-    def run_loop(self, prompt: str, history: List[Dict[str, str]]) -> Generator[Tuple[str, str], None, None]:
+    def run_loop(self, prompt: str, history: List[Dict[str, str]], model: str = None) -> Generator[Tuple[str, str], None, None]:
         """Runs the agent loop step-by-step."""
         # 1. Ask planner to create a plan based on query, conversation history, and tools
         tools_schema = self.tool_registry.get_tool_schemas()
-        plan = self.planner.create_plan(prompt, history, tools_schema)
+        plan = self.planner.create_plan(prompt, history, tools_schema, model=model)
 
         # 2. Check if a tool execution is needed
         temp_history = list(history)
@@ -55,4 +55,4 @@ class Agent:
                 })
 
         # 3. Request stream response from LLM Client
-        yield from self.llm_client.stream_chat(temp_history)
+        yield from self.llm_client.stream_chat(temp_history, model=model)
