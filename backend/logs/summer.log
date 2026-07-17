@@ -438,3 +438,22 @@ Here's a summary of your current workspace:
 
 This looks like a well-organized Python project with a strong emphasis on code (35 Python files) and good documentation (8 Markdown files). Let me know if you'd like to dive deeper into any specific file or directory!
 
+[08:20]
+User:
+hi
+
+[08:21]
+Summer:
+Hey! 👋 Welcome to Summer.
+
+I see you've got the **summer** project open (`C:\Users\mrztdsh\Projects\Personal\summer`) — a Python project with a backend (Poetry-managed) and a frontend (looks like JSX/Node-based). Git repo, 79 files, ~275 KB.
+
+What can I help you with today? A few ideas:
+- 🔍 Explore the codebase or explain how it's structured
+- 🐛 Debug an issue or review code
+- ✍️ Write new code, tests, or docs
+- 📁 Organize files, run commands, or set up tasks
+- 💬 Or just chat about something else entirely
+
+What's on your mind?
+

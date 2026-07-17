@@ -2,6 +2,18 @@
 
 All notable changes to Project Summer will be documented in this file.
 
+## [0.6.0] - 2026-07-17
+### Added
+- Created `backend/` subdirectory housing all Python application code.
+- Created empty `frontend/` placeholder directory for upcoming React UI.
+- Created `backend/main.py` as the FastAPI-only application entry point with CORS configured for the Vite dev server.
+- Added `/health` endpoint confirming API reachability.
+- Added `fastapi` and `uvicorn` to `pyproject.toml` dependencies.
+### Changed
+- Moved `app/`, `data/`, `docs/`, `logs/`, `config.toml`, `pyproject.toml`, `requirements.md`, `.env` into `backend/`.
+- Updated `pyproject.toml` to use `[tool.setuptools.packages.find]` for auto-discovery of all `app.*` subpackages.
+- Reinstalled package from `backend/` with `.venv` remaining at project root.
+
 ## [0.5.0] - 2026-07-17
 ### Added
 - Created decoupled workspace context analysis package (`app/workspace/` containing `models`, `detector`, `scanner`, `analyzer`, and `manager`).
