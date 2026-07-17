@@ -2,6 +2,19 @@
 
 All notable changes to Project Summer will be documented in this file.
 
+## [0.5.0] - 2026-07-17
+### Added
+- Created decoupled workspace context analysis package (`app/workspace/` containing `models`, `detector`, `scanner`, `analyzer`, and `manager`).
+- Implemented upward parent directory traversal to detect root indicators (like `.git`, `pyproject.toml`, `package.json`).
+- Implemented noise-filtering recursive workspace scanning with total byte size calculations.
+- Implemented extension frequency analysis and rule-based language stack classification (mapping pyproject.toml, package.json, Cargo.toml, pom.xml, go.mod, build.gradle, CMakeLists.txt, Makefile).
+- Implemented important file discovery mapping configurations, readmes, and scripts.
+- Implemented cached workspace manager context with `refresh()` and `summary()` formatter APIs.
+- Implemented active directory change tracking inside `get_workspace()` caching logic.
+- Implemented automated prompt context injection appending project metadata to LLM dialogue threads.
+- Added `/refresh-workspace` CLI slash command to trigger manual project updates.
+- Implemented `WorkspaceSummaryTool` allowing the LLM planner to autonomously query project structure via tool call without knowing the underlying workspace internals.
+
 ## [0.4.1] - 2026-07-17
 ### Added
 - Implemented `ReadFileTool` with workspace restriction, 1MB size threshold limits, and binary checks.

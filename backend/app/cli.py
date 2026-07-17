@@ -133,12 +133,17 @@ def main(ctx: typer.Context):
                 console.print("  [bold green]/model[/bold green]             - Switch active Ollama models interactively")
                 console.print("  [bold green]/config[/bold green]            - Print current application configurations")
                 console.print("  [bold green]/about[/bold green]             - Print information about Project Summer")
+                console.print("  [bold green]/refresh-workspace[/bold green]   - Recrawl workspace directories and rebuild summary")
                 console.print("  [bold green]/remember <category> <key> = <value>[/bold green]   - Manually save a fact to memory")
                 console.print("  [bold green]/forget <id>[/bold green]       - Delete a memory by its ID")
                 console.print("  [bold green]/memory[/bold green]            - List all stored memories")
                 console.print("  [bold green]/search-memory <q>[/bold green] - Search stored memories")
                 console.print("  [bold green]/clear-memory[/bold green]      - Delete all stored memories")
                 console.print("  [bold green]/exit[/bold green]              - Exit the interactive session")
+            elif cmd == "/refresh-workspace":
+                summer.workspace.refresh()
+                console.print("[bold green]Workspace crawled files and configurations reloaded successfully.[/bold green]")
+                console.print(summer.workspace.summary())
             elif cmd == "/clear":
                 summer.conversation.clear()
                 os.system('cls' if os.name == 'nt' else 'clear')

@@ -19,6 +19,8 @@ from app.tools.search_files import SearchFilesTool
 from app.tools.read_multiple_files import ReadMultipleFilesTool
 from app.tools.clipboard import ClipboardTool
 from app.memory.manager import MemoryManager
+from app.workspace.manager import WorkspaceManager
+from app.tools.workspace_summary import WorkspaceSummaryTool
 from app.agent.agent import Agent
 from app.conversation import Conversation
 
@@ -52,6 +54,12 @@ class Summer:
         self.tool_registry.register_tool(ReadMultipleFilesTool(self.config.project_root))
         self.tool_registry.register_tool(ClipboardTool())
         
+        # Initialize Workspace subsystem
+        self.workspace = WorkspaceManager(self.config.project_root)
+        
+        # Register workspace summary tool
+        self.tool_registry.register_tool(WorkspaceSummaryTool(self.workspace))
+        
         self.agent = Agent(self.llm_client, self.tool_registry)
         self.conversation = Conversation(self.config.system_prompt)
 
@@ -74,9 +82,13 @@ class Summer:
         # Log user query
         self._log_interaction("user", prompt)
 
-        # Retrieve relevant memories and inject them as system context
+        # Retrieve relevant memories and workspace context and inject them as system context
         memory_context = self.memory.retrieve_context(prompt)
+        workspace_context = f"\n[CURRENT WORKSPACE CONTEXT]\n{self.workspace.summary()}\n"
+        
         temp_messages = list(self.conversation.messages)
+        temp_messages.append({"role": "system", "content": workspace_context})
+        
         if memory_context:
             temp_messages.append({"role": "system", "content": memory_context})
 
