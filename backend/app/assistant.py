@@ -2,7 +2,7 @@ import os
 import datetime
 import json
 import re
-from typing import Generator, Tuple
+from typing import Generator, Tuple, List, Dict, Optional
 from app.config import Config
 from app.llm import LLMClient
 from app.tools.registry import ToolRegistry
@@ -22,7 +22,7 @@ from app.memory.manager import MemoryManager
 from app.workspace.manager import WorkspaceManager
 from app.tools.workspace_summary import WorkspaceSummaryTool
 from app.agent.agent import Agent
-from app.conversation import Conversation
+from app.conversations.manager import ConversationManager
 
 class Summer:
     """Main coordinator representing Summer. Orchestrates configuration, LLM, agent, and conversation history."""
@@ -61,7 +61,12 @@ class Summer:
         self.tool_registry.register_tool(WorkspaceSummaryTool(self.workspace))
         
         self.agent = Agent(self.llm_client, self.tool_registry)
-        self.conversation = Conversation(self.config.system_prompt)
+        self.conversation_manager = ConversationManager(
+            os.path.join(self.config.project_root, "data", "summer.db")
+        )
+        self.current_messages: List[Dict[str, str]] = [
+            {"role": "system", "content": self.config.system_prompt}
+        ]
 
     def _log_interaction(self, role: str, content: str):
         """Append interaction details with timestamp to a log file."""
@@ -77,38 +82,97 @@ class Summer:
         except Exception:
             pass
 
-    def chat(self, prompt: str, model: str = None) -> Generator[Tuple[str, str], None, None]:
-        """Send a user message, yield response chunks, and update persistent history."""
-        # Log user query
+    def chat(
+        self,
+        prompt: str,
+        model: Optional[str] = None,
+        conversation_id: Optional[str] = None,
+    ) -> Generator[Tuple[str, str], None, None]:
+        """Send a user message, yield response chunks, and update persistent history.
+        
+        If conversation_id is provided, messages are persisted to the database.
+        Otherwise, in-memory (legacy) behavior is used.
+        """
         self._log_interaction("user", prompt)
 
-        # Retrieve relevant memories and workspace context and inject them as system context
         memory_context = self.memory.retrieve_context(prompt)
         workspace_context = f"\n[CURRENT WORKSPACE CONTEXT]\n{self.workspace.summary()}\n"
-        
-        temp_messages = list(self.conversation.messages)
+
+        # Build message list for the LLM
+        temp_messages: List[Dict[str, str]] = [
+            {"role": "system", "content": self.config.system_prompt}
+        ]
+
+        if conversation_id:
+            db_messages = self.conversation_manager.get_messages(conversation_id)
+            for m in db_messages:
+                temp_messages.append({"role": m.role, "content": m.content})
+        else:
+            temp_messages.extend(self.current_messages[1:])
+
         temp_messages.append({"role": "system", "content": workspace_context})
-        
         if memory_context:
             temp_messages.append({"role": "system", "content": memory_context})
 
-        # 1. Run agent loop with current query and conversation history
         full_response = []
         for chunk_type, text in self.agent.run_loop(prompt, temp_messages, model=model):
             yield chunk_type, text
             if chunk_type == "content":
                 full_response.append(text)
 
-        # 2. Persist the turn to history once successfully finished
         response_str = "".join(full_response)
         if response_str:
-            self.conversation.add_user(prompt)
-            self.conversation.add_assistant(response_str)
-            # Log assistant response
             self._log_interaction("summer", response_str)
-            
-            # 3. Analyze exchange and automatically extract memories
             self._extract_and_store_memory_async(prompt, response_str)
+
+            if conversation_id:
+                self.conversation_manager.add_message(conversation_id, "user", prompt)
+                self.conversation_manager.add_message(
+                    conversation_id, "assistant", response_str
+                )
+                self._auto_title(conversation_id)
+            else:
+                self.current_messages.append({"role": "user", "content": prompt})
+                self.current_messages.append(
+                    {"role": "assistant", "content": response_str}
+                )
+
+    def _auto_title(self, conversation_id: str):
+        """Generate a short title using the LLM after the second user message."""
+        conv = self.conversation_manager.load(conversation_id)
+        if not conv or conv.title != "New Chat":
+            return
+
+        messages = self.conversation_manager.get_messages(conversation_id)
+        user_msgs = [m for m in messages if m.role == "user"]
+        assistant_msgs = [m for m in messages if m.role == "assistant"]
+
+        if len(user_msgs) < 2 or not assistant_msgs:
+            return
+
+        exchange = []
+        for m in messages:
+            if m.role == "user":
+                exchange.append(f"User: {m.content[:300]}")
+            elif m.role == "assistant":
+                exchange.append(f"Assistant: {m.content[:300]}")
+
+        prompt_text = (
+            "Generate a very short, specific title (maximum 5 words) for this conversation. "
+            "Return ONLY the title text, no quotes, no labels, no punctuation at the end.\n\n"
+            f"{chr(10).join(exchange)}\n\n"
+            "Title:"
+        )
+
+        try:
+            response = self.llm_client.chat(
+                [{"role": "user", "content": prompt_text}]
+            ).strip()
+            title = response.strip("\"'").strip()
+            if title:
+                self.conversation_manager.rename(conversation_id, title[:100])
+        except Exception:
+            pass
 
     def _extract_and_store_memory_async(self, user_msg: str, assistant_msg: str):
         """Analyze the exchange and automatically extract structured long-term memories."""

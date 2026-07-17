@@ -1,15 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --bg: #0b0f14;
-  --panel: rgba(255, 255, 255, 0.03);
-  --panel-border: rgba(255, 255, 255, 0.08);
-  --text: #d7dde5;
+  --bg: #000000;
+  --surface: #111111;
+  --surface-hover: #1a1a1a;
+  --border: #222222;
+  --border-light: #1a1a1a;
+  --text: #d4d4d4;
   --text-h: #ffffff;
-  --accent: #7dd3fc;
-  --sans: "Avenir Next", "Segoe UI", "SF Pro Display", sans-serif;
-  --heading: "Avenir Next", "Segoe UI", "SF Pro Display", sans-serif;
-  --mono: "SFMono-Regular", Consolas, monospace;
+  --text-muted: #737373;
+  --sans: "Inter", "SF Pro Display", "Avenir Next", "Segoe UI", sans-serif;
+  --heading: "Inter", "SF Pro Display", "Avenir Next", sans-serif;
+  --mono: "SFMono-Regular", "Cascadia Code", "JetBrains Mono", Consolas, monospace;
 
   font: 16px/150% var(--sans);
   color-scheme: dark;
@@ -38,24 +40,16 @@ body {
   flex-direction: column;
 }
 
-h1,
-h2,
-h3 {
+h1, h2, h3 {
   font-family: var(--heading);
   font-weight: 600;
   color: var(--text-h);
 }
 
-h2 {
-  font-size: 20px;
-  line-height: 1.2;
-}
-p {
-  margin: 0;
-}
+h2 { font-size: 20px; line-height: 1.2; }
+p  { margin: 0; }
 
-code,
-.counter {
+code, .counter {
   font-family: var(--mono);
   display: inline-flex;
   border-radius: 4px;
@@ -69,8 +63,20 @@ code {
   background: rgba(255, 255, 255, 0.06);
 }
 
-select,
-textarea,
-button {
+select, textarea, button {
   font: inherit;
+}
+
+*::-webkit-scrollbar {
+  width: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
