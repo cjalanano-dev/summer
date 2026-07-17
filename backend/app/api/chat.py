@@ -37,13 +37,15 @@ def chat(request: ChatRequest):
     prompt = request.messages[-1].content
 
     def event_generator():
-        # Get response generator from Summer.chat
         try:
-            # We call the generator from assistant
+            # We call the generator from assistant which yields (chunk_type, text)
             generator = assistant.chat(prompt)
-            for chunk in generator:
-                # Send the clean chunk to the browser
-                yield f"data: {json.dumps({'content': chunk})}\n\n"
+            for chunk_type, text in generator:
+                if chunk_type == "content":
+                    yield f"data: {json.dumps({'content': text})}\n\n"
+                elif chunk_type == "thinking":
+                    # Optionally handle backend thinking messages, wrap in <think> tags for the frontend parser
+                    yield f"data: {json.dumps({'content': f'<think>{text}</think>'})}\n\n"
         except Exception as e:
             yield f"data: {json.dumps({'error': str(e)})}\n\n"
 

@@ -19,6 +19,10 @@ class Conversation:
         """Append an assistant message to the history."""
         self.messages.append({"role": "assistant", "content": content})
 
+    def add_message(self, role: str, content: str):
+        """Append a message with a specific role to the history."""
+        self.messages.append({"role": role, "content": content})
+
     def clear(self):
         """Clear conversation history, resetting to system prompt."""
         self.messages = []
